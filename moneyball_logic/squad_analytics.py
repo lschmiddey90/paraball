@@ -114,7 +114,8 @@ def _get_league_multiplier(
         cfg_country = _clean_str(str(item.get("country", "")))
 
         if cfg_league == div_clean and cfg_country == country_clean:
-            return 1.0
+            # Return custom factor if defined, defaulting to 1.0 if factor key is missing
+            return float(item.get("factor", 1.0))
 
     return default_multiplier
 

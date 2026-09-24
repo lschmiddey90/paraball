@@ -20,14 +20,12 @@ def _get_league_multiplier(
     if not div_clean or not country_clean:
         return default_multiplier
 
-    # Handle dictionary config wrapper if passed directly
     if isinstance(top_leagues_config, dict):
         top_leagues_config = top_leagues_config.get("top_leagues", [])
 
     if not isinstance(top_leagues_config, list):
         return default_multiplier
 
-    # Check for exact string matches on both League and Country
     for item in top_leagues_config:
         if not isinstance(item, dict):
             continue
@@ -36,7 +34,8 @@ def _get_league_multiplier(
         cfg_country = _clean_str(str(item.get("country", "")))
 
         if cfg_league == div_clean and cfg_country == country_clean:
-            return 1.0
+            # Return custom factor if defined, defaulting to 1.0 if factor key is missing
+            return float(item.get("factor", 1.0))
 
     return default_multiplier
 
@@ -46,16 +45,19 @@ def calculate_moneyball_scores(
     filtered_df_own_team,
     profile_cfg,
     inverse_metrics,
-    top_leagues_config,
-    default_league_multiplier,
-    own_team_division,
-    own_team_country="Germany",
+    config,  # Pass full config or general_config here
 ):
     df_market = filtered_df.copy()
     df_own = filtered_df_own_team.copy()
 
     df_market["_is_own_team"] = False
     df_own["_is_own_team"] = True
+
+    # Safely extract league multiplier parameters directly from config
+    general_cfg = config.get("general", config)  # Handles both full config dict or general section
+    league_cfg = general_cfg.get("league_multipliers", {})
+    top_leagues_config = league_cfg.get("top_leagues", [])
+    default_league_multiplier = league_cfg.get("default", 0.75)
 
     # 1. Detect dynamic column casing ('Division' vs 'division', 'Based In' vs 'Based in')
     division_col = next(
@@ -66,17 +68,6 @@ def calculate_moneyball_scores(
         (col for col in df_market.columns if col.lower() == "based in"),
         "Based In",
     )
-
-    # 2. Fill missing division / country metadata for own team
-    if division_col not in df_own.columns:
-        df_own[division_col] = own_team_division
-    else:
-        df_own[division_col] = df_own[division_col].fillna(own_team_division)
-
-    if based_in_col not in df_own.columns:
-        df_own[based_in_col] = own_team_country
-    else:
-        df_own[based_in_col] = df_own[based_in_col].fillna(own_team_country)
 
     # Combine datasets for uniform percentile ranking
     df_combined = pd.concat([df_market, df_own], ignore_index=False)

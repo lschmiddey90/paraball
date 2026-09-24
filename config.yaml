@@ -13,26 +13,44 @@ general:
     default: 0.75
     top_leagues:
       # Big 5 European Leagues
-      - league: "Premier Division"      # FM names Premier League as Premier Division in some views/exports
+      - league: "Premier Division"
         country: "England"
+        factor: 1.0
       - league: "Bundesliga"
         country: "Germany"
-      - league: "Ligue 1 McDonald's"    # Or "Ligue 1 Uber Eats" / "Ligue 1" depending on database update
+        factor: 1.0
+      - league: "Ligue 1 McDonald's"
         country: "France"
+        factor: 0.95
       - league: "Serie A"
         country: "Italy"
-      - league: "First Division"       # FM exports Spanish La Liga / First Division as "First Division"
+        factor: 0.95
+      - league: "First Division"
         country: "Spain"
+        factor: 1.0
       
-      # Other Tier-1 Leagues (From your export list)
+      # Other Tier-1 / Tier-2 Leagues
       - league: "Premier Division"
         country: "Argentina"
+        factor: 0.85
       - league: "First Division"
         country: "Brazil"
+        factor: 0.85
       - league: "Eredivisie"
         country: "Netherlands"
-      - league: "3. Liga"
+        factor: 0.90
+      - league: "Jupiler Pro League"
+        country: "Belgium"
+        factor: 0.85
+      - league: "Bundesliga 2"
         country: "Germany"
+        factor: 0.80
+      - league: "Premier Division"
+        country: "Austria"
+        factor: 0.80
+      - league: "PKO BP Ekstraklasa"
+        country: "Poland"
+        factor: 0.78
 
 positions:
   # Torwart (Goalkeeper)

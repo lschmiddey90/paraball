@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from .filter_logic import filter_players_by_position
+from .squad_analytics import _get_league_multiplier, apply_league_normalization
 
 
 def _get_group_metrics_and_weights(role_cfg):
@@ -30,13 +31,18 @@ def calculate_player_profile_scores(
 ):
     """Calculates weighted Moneyball Scores (0.0 to 1.0) for every player across
     applicable positional profiles based on metric percentiles from df_base
-    without applying league multipliers.
+    after applying league normalization multipliers.
     """
     if inverse_metrics is None:
         inverse_metrics = ["Possession Lost per 90"]
 
     general_config = config.get("general", {})
     pos_config = config.get("positions", {})
+    
+    # Extract league multipliers config
+    league_cfg = config.get("league_multipliers", {})
+    top_leagues_config = league_cfg.get("top_leagues", [])
+    default_multiplier = league_cfg.get("default", 0.75)
 
     id_cols = general_config.get(
         "id_columns",
@@ -65,11 +71,20 @@ def calculate_player_profile_scores(
         if not valid_metrics:
             continue
 
+        # --- Apply League Normalization Multipliers ---
+        base_pos_df = apply_league_normalization(
+            base_pos_df, valid_metrics, top_leagues_config, default_multiplier
+        )
+        if not own_pos_df.empty:
+            own_pos_df = apply_league_normalization(
+                own_pos_df, valid_metrics, top_leagues_config, default_multiplier
+            )
+
         # Tag source provenance
         base_pos_df["_Source"] = "Market"
         own_pos_df["_Source"] = "Own Squad"
 
-        # Combine datasets directly without league normalization
+        # Combine normalized datasets
         combined_df = pd.concat([base_pos_df, own_pos_df], ignore_index=True)
 
         if combined_df.empty:
