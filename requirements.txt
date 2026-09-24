@@ -1,0 +1,8 @@
+scipy==1.18.1
+pandas==3.0.5
+ipykernel==7.3.0
+ipython==9.17.1
+matplotlib==3.11.1
+matplotlib-inline==0.2.2
+numpy==2.5.3
+Unidecode==1.4.0

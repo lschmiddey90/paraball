@@ -1,0 +1,575 @@
+# Moneyball Football Manager 2026 - Positional Metrics Configuration
+
+general:
+  id_columns:
+    - "Player"
+    - "Position"
+    - "Age"
+    - "Transfer Value"
+    - "Division"
+    - "Based In"
+
+  league_multipliers:
+    default: 0.75
+    top_leagues:
+      # Big 5 European Leagues
+      - league: "Premier Division"      # FM names Premier League as Premier Division in some views/exports
+        country: "England"
+      - league: "Bundesliga"
+        country: "Germany"
+      - league: "Ligue 1 McDonald's"    # Or "Ligue 1 Uber Eats" / "Ligue 1" depending on database update
+        country: "France"
+      - league: "Serie A"
+        country: "Italy"
+      - league: "First Division"       # FM exports Spanish La Liga / First Division as "First Division"
+        country: "Spain"
+      
+      # Other Tier-1 Leagues (From your export list)
+      - league: "Premier Division"
+        country: "Argentina"
+      - league: "First Division"
+        country: "Brazil"
+      - league: "Eredivisie"
+        country: "Netherlands"
+      - league: "3. Liga"
+        country: "Germany"
+
+positions:
+  # Torwart (Goalkeeper)
+  GK:
+    positions: ["GK"]
+    sides: ["C"]
+    metrics:
+      - "Save Percentage"
+      - "Expected Save Percentage"
+      - "xGP_perc"
+      - "xGP/90"
+    metric_groups:
+      Shot Stopping & Prevention:
+        weight: 1.0
+        metrics:
+          - "Save Percentage"
+          - "xGP_perc"
+
+  # Innenverteidiger (Center Backs)
+  CB:
+    positions: ["D"]
+    sides: ["C"]
+    metrics:
+      - "Tackles Completed per 90"
+      - "Key Tackles per 90"
+      - "Interceptions per 90"
+      - "Blk/90"
+      - "Shts Blckd/90"
+      - "Clearances per 90"
+      - "Headers Won per 90"
+      - "Headers Won Percentage"
+      - "Key Headers per 90"
+      - "Possession Won per 90"
+      - "Possession Lost per 90"
+      - "Pass Completion Percentage"
+      - "Progressive Passes per 90"
+      - "Tackle Completion Percentage"
+    metric_groups:
+      Ground Defending:
+        weight: 1.4
+        metrics:
+          - "Key Tackles per 90"
+          - "Tackle Completion Percentage"
+      Aerial Dominance:
+        weight: 1.3
+        metrics:
+          - "Headers Won Percentage"
+          - "Key Headers per 90"
+      Anticipation & Protection:
+        weight: 1.1
+        metrics:
+          - "Interceptions per 90"
+          - "Blk/90"
+          - "Shts Blckd/90"
+          - "Possession Won per 90"
+      Distribution & Security:
+        weight: 0.8
+        metrics:
+          - "Pass Completion Percentage"
+          - "Progressive Passes per 90"
+      Pressure Resistance:
+        weight: 1.2
+        metrics:
+          - "Possession Lost per 90"
+
+  WCB:
+    positions: ["D"]
+    sides: ["C"]
+    metrics:
+      - "Tackles Completed per 90"
+      - "Key Tackles per 90"
+      - "Interceptions per 90"
+      - "Possession Won per 90"
+      - "Clearances per 90"
+      - "Blk/90"
+      - "Shts Blckd/90"
+      - "Headers Won Percentage"
+      - "Headers Won per 90"
+      - "Key Headers per 90"
+      - "Progressive Passes per 90"
+      - "Pass Completion Percentage"
+      - "Passes Attempted per 90"
+      - "Sprints/90"
+      - "Dist/90"
+      - "Pres A/90"
+      - "Possession Lost per 90"
+    metric_groups:
+      Defensive Ground Actions:
+        weight: 1.5
+        metrics:
+          - "Tackles Completed per 90"
+          - "Key Tackles per 90"
+          - "Interceptions per 90"
+          - "Possession Won per 90"
+          - "Blk/90"
+          - "Shts Blckd/90"
+      Aerial Dominance:
+        weight: 1.5
+        metrics:
+          - "Headers Won Percentage"
+          - "Key Headers per 90"
+      Ball Progression & Wide Play:
+        weight: 1.1
+        metrics:
+          - "Progressive Passes per 90"
+          - "Possession Lost per 90"
+      Mobility & Pressing Work Rate:
+        weight: 0.6
+        metrics:
+          - "Sprints/90"
+          - "Dist/90"
+          - "Pres A/90"
+
+  # Außenverteidiger / Wingbacks (Full Backs / Wing Backs)
+  FB_WB:
+    positions: ["D", "WB"]
+    sides: ["R/L"]
+    metrics:
+      - "Tackles Completed per 90"
+      - "Interceptions per 90"
+      - "Possession Won per 90"
+      - "Progressive Passes per 90"
+      - "Pass Completion Percentage"
+      - "Crosses Attempted per 90"
+      - "Crosses Completed Ratio"
+      - "Open Play Crosses Attempted per 90"
+      - "Open Play Crosses Completed per 90"
+      - "Key Passes per 90"
+      - "xA/90"
+      - "Sprints/90"
+      - "Dist/90"
+      - "Tackle Completion Percentage"
+      - "Pres A/90"
+      - "Pres C/90"
+    metric_groups:
+      Defensive Security:
+        weight: 1.5
+        metrics:
+          - "Interceptions per 90"
+          - "Possession Won per 90"
+          - "Tackle Completion Percentage"
+      Crossing & Delivery:
+        weight: 0.75
+        metrics:
+          - "Crosses Completed Ratio"
+          - "Open Play Crosses Completed per 90"
+          - "Open Play Crosses Attempted per 90"
+          - "Crosses Attempted per 90"
+      Chance Creation & Transition:
+        weight: 0.8
+        metrics:
+          - "Progressive Passes per 90"
+          - "Key Passes per 90"
+          - "xA/90"
+          - "Pass Completion Percentage"
+      Athleticism & Work Rate:
+        weight: 1.5
+        metrics:
+          - "Sprints/90"
+          - "Dist/90"
+      Pressing:
+        weight: 1.5
+        metrics:
+          - "Pres A/90"
+          - "Pres C/90"
+
+  # DM_Safety_Pressing:
+  #   positions: ["DM"]
+  #   sides: ["C"]
+  #   metrics:
+  #     - "Pres A/90"
+  #     - "Pres C/90"
+  #     - "Possession Won per 90"
+  #     - "Tackles Completed per 90"
+  #     - "Key Tackles per 90"
+  #     - "Interceptions per 90"
+  #     - "Clearances per 90"
+  #     - "Blk/90"
+  #     - "Pass Completion Percentage"
+  #     - "Passes Attempted per 90"
+  #     - "Possession Lost per 90"
+  #     - "Headers Won Percentage"
+  #     - "Headers Won per 90"
+  #     - "Sprints/90"
+  #     - "Dist/90"
+  #   metric_groups:
+  #     Pressing:
+  #       weight: 1.6
+  #       metrics:
+  #         - "Pres A/90"
+  #         - "Pres C/90"
+  #         - "Possession Won per 90"
+  #     Safe Retention & Rest Defense:
+  #       weight: 1.2
+  #       metrics:
+  #         - "Pass Completion Percentage"
+  #         - "Passes Attempted per 90"
+  #         - "Possession Lost per 90"
+  #     Central Shield & Aerial Cover:
+  #       weight: 1.1
+  #       metrics:
+  #         - "Headers Won Percentage"
+  #         - "Headers Won per 90"
+  #         - "Blk/90"
+  #     Active Regains:
+  #       weight: 1.5
+  #       metrics:
+  #         - "Tackles Completed per 90"
+  #         - "Key Tackles per 90"
+  #         - "Interceptions per 90"
+
+  DLP_Pressing:
+    positions: ["DM"]
+    sides: ["C"]
+    metrics:
+      - "Passes Attempted per 90"
+      - "Pass Completion Percentage"
+      - "Progressive Passes per 90"
+      - "Key Passes per 90"
+      - "Chances Created per 90"
+      - "Pres A/90"
+      - "Pres C/90"
+      - "Possession Won per 90"
+      - "Tackles Completed per 90"
+      - "Key Tackles per 90"
+      - "Interceptions per 90"
+      - "Possession Lost per 90"
+      - "Sprints/90"
+      - "Dist/90"
+    metric_groups:
+      Passing & Tempo Distribution:
+        weight: 1.8
+        metrics:
+          - "Passes Attempted per 90"
+          - "Progressive Passes per 90"
+          - "Key Passes per 90"
+          - "Chances Created per 90"
+      Aggressive Pressing & Ball Regains:
+        weight: 1.2
+        metrics:
+          - "Pres A/90"
+          - "Pres C/90"
+          - "Possession Won per 90"
+          - "Tackles Completed per 90"
+          - "Interceptions per 90"
+      Ball Security & Retention:
+        weight: 1.0
+        metrics:
+          - "Pass Completion Percentage"
+          - "Possession Lost per 90"
+      Engine & Mobility:
+        weight: 0.8
+        metrics:
+          - "Sprints/90"
+          - "Dist/90"
+
+  # Defensives/Zentrales Mittelfeld (Ballgewinn & Stabilität)
+  Channel_CM:
+    positions: ["M"]
+    sides: ["C"]
+    metrics:
+      - "Tackles Completed per 90"
+      - "Key Tackles per 90"
+      - "Interceptions per 90"
+      - "Possession Won per 90"
+      - "Possession Lost per 90"
+      - "Pres A/90"
+      - "Pres C/90"
+      - "Pass Completion Percentage"
+      - "Passes Attempted per 90"
+      - "Progressive Passes per 90"
+      - "Dist/90"
+      - "Tackle Completion Percentage"
+      - "Sprints/90"
+      - "Open Play Key Passes per 90"
+    metric_groups:
+      Defensive Actions:
+        weight: 1.0
+        metrics:
+          - "Interceptions per 90"
+          - "Possession Won per 90"
+      Pressing & Activity:
+        weight: 1.0
+        metrics:
+          - "Pres A/90"
+          - "Pres C/90"
+      Activity:
+        weight: 1.4
+        metrics:
+          - "Dist/90"
+          - "Sprints/90"
+      Passing:
+        weight: 1.2
+        metrics:
+          - "Open Play Key Passes per 90"
+          - "Chances Created per 90"
+          - "xA/90"
+      Ball Circulation:
+        weight: 0.75
+        metrics:
+          - "Pass Completion Percentage"
+          - "Passes Attempted per 90"
+          - "Progressive Passes per 90"
+
+  # Zentrales/Offensives Mittelfeld (Spielmacher)
+  CM_AM_Playmaker:
+    positions: ["AM"]
+    sides: ["C"]
+    metrics:
+      - "Key Passes per 90"
+      - "Open Play Key Passes per 90"
+      - "Chances Created per 90"
+      - "xA/90"
+      - "Asts/90"
+      - "Pass Completion Percentage"
+      - "Dribbles per 90"
+      - "Pres C/90"
+      - "Shots From Outside The Box Per 90 minutes"
+      - "Shot/90"
+      - "NP-xG/90"      
+      - "Sprints/90"
+      - "Dist/90"
+      - "Pres A/90"
+      - "Pres C/90"
+      - "Possession Won per 90"
+    metric_groups:
+      Creativity & Key Passing:
+        weight: 1.8
+        metrics:
+          - "Open Play Key Passes per 90"
+          - "Chances Created per 90"
+          - "xA/90"
+          - "Asts/90"
+          - "Key Passes per 90"
+      Goal Threat:
+        weight: 1.2
+        metrics:
+          - "NP-xG/90"
+          - "Shots From Outside The Box Per 90 minutes"
+          - "Shot/90"
+      Pressing & Workrate:
+        weight: 1.0
+        metrics:
+          - "Pres A/90"
+          - "Pres C/90"
+          - "Sprints/90"
+          - "Dist/90"
+          - "Possession Won per 90"
+
+  # Flügelstürmer (Winger / Inside Forwards)
+  # WINGER:
+  #   positions: ["AM", "M"]
+  #   sides: ["R/L"]
+  #   metrics:
+  #     - "Dribbles per 90"
+  #     - "Crosses Completed Ratio"
+  #     - "Open Play Crosses Attempted per 90"
+  #     - "Open Play Crosses Completed per 90"
+  #     - "Open Play Key Passes per 90"
+  #     - "Chances Created per 90"
+  #     - "xA/90"
+  #     - "NP-xG/90"
+  #     - "xG-OP"
+  #     - "Shots on Target Percentage"
+  #     - "Sprints/90"
+  #   metric_groups:
+  #     Dribbling & Delivery:
+  #       weight: 1.4
+  #       metrics:
+  #         - "Dribbles per 90"
+  #         - "Crosses Completed Ratio"
+  #         - "Open Play Crosses Attempted per 90"
+  #         - "Open Play Crosses Completed per 90"
+  #     Creativity & Shot Creation:
+  #       weight: 1.3
+  #       metrics:
+  #         - "Open Play Key Passes per 90"
+  #         - "Chances Created per 90"
+  #         - "xA/90"
+  #     Goal Threat & Output:
+  #       weight: 1.2
+  #       metrics:
+  #         - "NP-xG/90"
+  #         - "xG-OP"
+  #         - "Shots on Target Percentage"
+  #     Mobility:
+  #       weight: 0.8
+  #       metrics:
+  #         - "Sprints/90"
+
+  # Shadow_Striker:
+  #   positions: ["AM"]
+  #   sides: ["C"]
+  #   metrics:
+  #     - "NP-xG/90"
+  #     - "Goals per 90 minutes"
+  #     - "Shot/90"
+  #     - "Shots on Target per 90"
+  #     - "Shots on Target Percentage"
+  #     - "Conv %"
+  #     - "xA/90"
+  #     - "Asts/90"
+  #     - "Key Passes per 90"
+  #     - "Chances Created per 90"
+  #     - "Open Play Key Passes per 90"
+  #     - "Pres A/90"
+  #     - "Pres C/90"
+  #     - "Possession Won per 90"
+  #     - "Sprints/90"
+  #     - "Dist/90"
+  #   metric_groups:
+  #     Goal Scoring & Box Arrival:
+  #       weight: 1.6
+  #       metrics:
+  #         - "NP-xG/90"
+  #         - "Goals per 90 minutes"
+  #         - "Shot/90"
+  #         - "Shots on Target per 90"
+  #     Finishing Efficiency:
+  #       weight: 1.2
+  #       metrics:
+  #         - "Shots on Target Percentage"
+  #         - "Conv %"
+  #     High Pressing & Ball Regains:
+  #       weight: 1.4
+  #       metrics:
+  #         - "Pres A/90"
+  #         - "Pres C/90"
+  #         - "Possession Won per 90"
+  #     Creative Link-Up:
+  #       weight: 1.0
+  #       metrics:
+  #         - "xA/90"
+  #         - "Asts/90"
+  #         - "Key Passes per 90"
+  #         - "Chances Created per 90"
+  #         - "Open Play Key Passes per 90"
+  #     Work Rate & Mobility:
+  #       weight: 0.8
+  #       metrics:
+  #         - "Sprints/90"
+  #         - "Dist/90"
+
+# Stürmer (Striker / Centre Forward)
+  Target_FW:
+    positions: ["ST"]
+    sides: ["C"]
+    metrics:
+      - "NP-xG/90"
+      - "Goals per 90 minutes"
+      - "Non-Penalty Goals per 90"
+      - "Shot/90"
+      - "Shots on Target per 90"
+      - "Shots on Target Percentage"
+      - "Conv %"
+      - "Asts/90"
+      - "xA/90"
+      - "Headers Won Percentage"
+      - "Headers Attempted per 90"
+      - "Key Headers per 90"
+      - "Pres C/90"
+    metric_groups:
+      Goal Scoring:
+          weight: 1.0
+          metrics:
+            - "Non-Penalty Goals per 90"
+      Direct Threat:
+        weight: 0.8
+        metrics:
+          - "NP-xG/90"
+          - "Shot/90"
+      Shooting Efficiency & Precision:
+        weight: 1.0
+        metrics:
+          - "Shots on Target per 90"
+          - "Shots on Target Percentage"
+          - "Conv %"
+      Link-up & Playmaking:
+        weight: 1.2
+        metrics:
+          - "xA/90"
+          - "Asts/90"
+      Aerial Dominance:
+        weight: 1.5
+        metrics:
+          - "Headers Won Percentage"
+          - "Headers Attempted per 90"
+          - "Key Headers per 90"
+      Pressing & High Work Rate:
+        weight: 1.0
+        metrics:
+          - "Pres C/90"
+
+  # Stürmer (Striker / Centre Forward)
+  ST:
+    positions: ["ST"]
+    sides: ["C"]
+    metrics:
+      - "NP-xG/90"
+      - "Goals per 90 minutes"
+      - "Non-Penalty Goals per 90"
+      - "Shot/90"
+      - "Shots on Target per 90"
+      - "Shots on Target Percentage"
+      - "Conv %"
+      - "Asts/90"
+      - "xA/90"
+      - "Headers Won Percentage"
+      - "Headers Attempted per 90"
+      - "Key Headers per 90"
+      - "Pres C/90"
+    metric_groups:
+      Goal Scoring:
+          weight: 2.0
+          metrics:
+            - "Non-Penalty Goals per 90"
+      Direct Threat:
+        weight: 1.2
+        metrics:
+          - "NP-xG/90"
+          - "Shot/90"
+      Shooting Efficiency & Precision:
+        weight: 1.4
+        metrics:
+          - "Shots on Target per 90"
+          - "Shots on Target Percentage"
+          - "Conv %"
+      Link-up & Playmaking:
+        weight: 0.9
+        metrics:
+          - "xA/90"
+          - "Asts/90"
+      Aerial Dominance:
+        weight: 0.8
+        metrics:
+          - "Headers Won Percentage"
+      Pressing & High Work Rate:
+        weight: 0.5
+        metrics:
+          - "Pres C/90"
