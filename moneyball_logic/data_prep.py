@@ -36,9 +36,12 @@ def clean_numeric_value(val):
 
 def prepare_dataframe(df, id_columns=None):
     """Prepares and cleans the dataset by converting numeric columns,
-
     handling European percentage strings, preserving text ID columns,
     and calculating derived metrics (e.g., xGP_perc).
+
+    Special handling:
+    - 'Unknown' Transfer Value -> Transfer_Value_Min = -99
+                                -> Transfer_Value_Max = -99
     """
     if df.empty:
         return df
@@ -64,23 +67,20 @@ def prepare_dataframe(df, id_columns=None):
     else:
         text_columns = default_text_cols
 
-    for col in cleaned_df.columns:
-        if col in text_columns:
-            continue
+    # ---------------------------------------------------------
+    # Handle Transfer Value BEFORE numeric conversion
+    # ---------------------------------------------------------
+    unknown_transfer_mask = None
 
-        # If column contains text/words rather than numbers, keep it as text
-        sample = cleaned_df[col].dropna()
-        if not sample.empty and isinstance(sample.iloc[0], str):
-            # If the value contains alphabetic characters (and isn't just "N/A" or "-")
-            first_val = sample.iloc[0].strip().replace("%", "")
-            if any(c.isalpha() for c in first_val) and first_val not in ["N/A", "nan", "None"]:
-                text_columns.add(col)
-                continue
-
-        cleaned_df[col] = cleaned_df[col].apply(clean_numeric_value)
-
-    # Clean Transfer Values if present
     if "Transfer Value" in cleaned_df.columns:
+        unknown_transfer_mask = (
+            cleaned_df["Transfer Value"]
+            .astype(str)
+            .str.strip()
+            .eq("Unknown")
+        )
+
+        # Create min/max columns if they don't already exist
         if (
             "Transfer_Value_Min" not in cleaned_df.columns
             and "Transfer_Value_Max" not in cleaned_df.columns
@@ -88,13 +88,74 @@ def prepare_dataframe(df, id_columns=None):
             cleaned_df["Transfer_Value_Min"] = cleaned_df["Transfer Value"]
             cleaned_df["Transfer_Value_Max"] = cleaned_df["Transfer Value"]
 
-    # Calculate xGP_perc metric if both source columns exist
-    if "xGP" in cleaned_df.columns and "Goals Conceded" in cleaned_df.columns:
-        xgp = pd.to_numeric(cleaned_df["xGP"], errors="coerce")
-        gc = pd.to_numeric(cleaned_df["Goals Conceded"], errors="coerce")
+    # ---------------------------------------------------------
+    # Convert numeric columns
+    # ---------------------------------------------------------
+    for col in cleaned_df.columns:
+        if col in text_columns:
+            continue
 
-        # Replace 0 with NaN for Goals Conceded to avoid division by zero
+        # If column contains text/words rather than numbers, keep it as text
+        sample = cleaned_df[col].dropna()
+
+        if not sample.empty and isinstance(sample.iloc[0], str):
+            first_val = sample.iloc[0].strip().replace("%", "")
+
+            if (
+                any(c.isalpha() for c in first_val)
+                and first_val not in ["N/A", "nan", "None"]
+            ):
+                text_columns.add(col)
+                continue
+
+        cleaned_df[col] = cleaned_df[col].apply(clean_numeric_value)
+
+    # ---------------------------------------------------------
+    # Finalize Transfer Value Min / Max
+    # ---------------------------------------------------------
+    if "Transfer Value" in cleaned_df.columns:
+
+        # Make sure the derived columns are numeric
+        cleaned_df["Transfer_Value_Min"] = pd.to_numeric(
+            cleaned_df["Transfer_Value_Min"],
+            errors="coerce",
+        )
+
+        cleaned_df["Transfer_Value_Max"] = pd.to_numeric(
+            cleaned_df["Transfer_Value_Max"],
+            errors="coerce",
+        )
+
+        # Set Unknown transfer values to -99
+        if unknown_transfer_mask is not None:
+            cleaned_df.loc[
+                unknown_transfer_mask,
+                "Transfer_Value_Min",
+            ] = -99
+
+            cleaned_df.loc[
+                unknown_transfer_mask,
+                "Transfer_Value_Max",
+            ] = -99
+
+    # ---------------------------------------------------------
+    # Calculate xGP_perc metric
+    # ---------------------------------------------------------
+    if "xGP" in cleaned_df.columns and "Goals Conceded" in cleaned_df.columns:
+
+        xgp = pd.to_numeric(
+            cleaned_df["xGP"],
+            errors="coerce",
+        )
+
+        gc = pd.to_numeric(
+            cleaned_df["Goals Conceded"],
+            errors="coerce",
+        )
+
+        # Replace 0 with NaN to avoid division by zero
         gc_safe = gc.replace(0, np.nan)
+
         cleaned_df["xGP_perc"] = ((xgp + gc) / gc_safe) - 1.0
 
     return cleaned_df
