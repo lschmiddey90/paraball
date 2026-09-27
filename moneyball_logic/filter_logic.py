@@ -5,7 +5,6 @@ import pandas as pd
 
 def parse_player_positions(pos_string):
     """Parses complex FM position strings like 'DM, M/AM (C)' or 'M (L), AM (LC)'
-
     into structured tuples: [('DM', ['C']), ('M', ['C']), ('AM', ['C'])].
     """
     if not isinstance(pos_string, str) or not pos_string.strip():
@@ -37,7 +36,6 @@ def parse_player_positions(pos_string):
 
 def matches_position_and_side(pos_string, selected_positions, selected_sides):
     """Returns True if at least one position role matches selected_positions
-
     AND that specific role satisfies selected_sides.
     """
     parsed_roles = parse_player_positions(pos_string)
@@ -74,58 +72,6 @@ def filter_players_by_position(
     return df[mask].copy()
 
 
-def parse_transfer_value_de(val):
-    """Parses Football Manager transfer value strings using German locale rules:
-
-    - '.' is treated as thousands separator (e.g., 20.000 -> 20000.0)
-    - ',' is treated as decimal point (e.g., 20,5 -> 20.5)
-    - Handles ranges ('€10M - €20M' takes lower/min or upper bound)
-    - Unpriced / 'Not for sale' returns inf
-    """
-    if pd.isna(val) or val is None:
-        return 0.0
-
-    if isinstance(val, (int, float)):
-        return float(val)
-
-    val_str = str(val).strip()
-
-    if not val_str or val_str.lower() in [
-        "not for sale",
-        "unverkäuflich",
-        "uncertain",
-        "unknown",
-        "n/a",
-        "-",
-    ]:
-        return float("inf")
-
-    # If it's a range (e.g. "€10M - €20M"), take lower bound for min comparison
-    if "-" in val_str:
-        val_str = val_str.split("-")[0].strip()
-
-    # Determine multiplier
-    multiplier = 1.0
-    val_upper = val_str.upper()
-    if "M" in val_upper:
-        multiplier = 1_000_000.0
-    elif "K" in val_upper:
-        multiplier = 1_000.0
-
-    # Extract numeric parts and delimiters
-    clean_str = re.sub(r"[^\d.,]", "", val_str)
-    if not clean_str:
-        return 0.0
-
-    # German formatting: Remove thousand dots, replace decimal comma with dot
-    clean_str = clean_str.replace(".", "").replace(",", ".")
-
-    try:
-        return float(clean_str) * multiplier
-    except ValueError:
-        return float("inf")
-
-
 def apply_post_scoring_filters(
     scored_df, min_age=None, max_age=None, max_transfer_val=None
 ):
@@ -140,17 +86,22 @@ def apply_post_scoring_filters(
         if max_age is not None:
             df_out = df_out[df_out["Age"] <= max_age]
 
-    # Filter Transfer Value
+    # Filter Transfer Value using pre-cleaned numeric columns
     if max_transfer_val is not None:
-        # Check target columns
         target_col = None
-        for col in ["Transfer_Value_Min", "Transfer Value", "Transfer_Value_Max"]:
+        for col in ["Transfer_Value_Min", "Transfer_Value_Max", "Transfer Value"]:
             if col in df_out.columns:
                 target_col = col
                 break
 
         if target_col:
-            num_vals = df_out[target_col].apply(parse_transfer_value_de)
-            df_out = df_out[(num_vals <= max_transfer_val) | num_vals.isna()]
+            # Ensure target column is numeric
+            transfer_vals = pd.to_numeric(df_out[target_col], errors="coerce")
+
+            # Include players whose minimum transfer value is within budget
+            # Exclude unpriced / unknown players (-99 or NaN)
+            df_out = df_out[
+                (transfer_vals <= max_transfer_val)
+            ]
 
     return df_out

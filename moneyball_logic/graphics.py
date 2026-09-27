@@ -137,6 +137,78 @@ def plot_top_20_spider_grid(
     plt.show()
 
 
+def format_transfer_value(val):
+    """Formats numeric or string transfer values into readable currency strings.
+
+    - 8000.0 -> "€8K"
+    - 1000000.0 -> "€1Mio"
+    - 1500000.0 -> "€1.5Mio"
+    - -99 or negative -> "Not for Sale / Unknown"
+    """
+    if pd.isna(val) or val is None:
+        return "-"
+
+    # Try converting numeric floats/ints
+    try:
+        num_val = float(val)
+        if num_val < 0:
+            return "Not for Sale / Unknown"
+        if num_val == 0:
+            return "€0"
+
+        if num_val >= 1_000_000:
+            val_mio = num_val / 1_000_000
+            # Format clean integers without decimal (e.g., 1Mio instead of 1.0Mio)
+            return (
+                f"€{int(val_mio)}Mio"
+                if val_mio.is_integer()
+                else f"€{val_mio:.1f}Mio"
+            )
+        elif num_val >= 1_000:
+            val_k = num_val / 1_000
+            return (
+                f"€{int(val_k)}K" if val_k.is_integer() else f"€{val_k:.1f}K"
+            )
+        else:
+            return (
+                f"€{int(num_val)}"
+                if num_val.is_integer()
+                else f"€{num_val:.1f}"
+            )
+    except (ValueError, TypeError):
+        pass
+
+    # Fallback for unparsed text strings
+    val_str = str(val).strip()
+    if val_str in ["-99", "-99.0", "Not for Sale", "Unknown", "-", "N/A"]:
+        return "Not for Sale / Unknown"
+
+    return val_str
+
+
+def build_transfer_value_display(val_min, val_max):
+    """Generates a cohesive display string comparing Min and Max values."""
+    formatted_min = format_transfer_value(val_min)
+    formatted_max = format_transfer_value(val_max)
+
+    if (
+        formatted_min == "Not for Sale / Unknown"
+        or formatted_max == "Not for Sale / Unknown"
+    ):
+        return "Val: Not for Sale / Unknown"
+
+    if formatted_min == "-" and formatted_max == "-":
+        return "Val: -"
+
+    if formatted_min == formatted_max or formatted_max == "-":
+        return f"Val: {formatted_min}"
+
+    if formatted_min == "-":
+        return f"Val: {formatted_max}"
+
+    return f"Val: {formatted_min} - {formatted_max}"
+
+
 def plot_scouting_cards(
     scored_df,
     profile_name="FB_WB",
@@ -183,8 +255,8 @@ def plot_scouting_cards(
 
         player_name = str(row.get("Player", f"Player {i+1}"))
         moneyball_score = float(row.get("Moneyball_Score", 0.0))
-        val_min = str(row.get("Transfer_Value_Min", "-"))
-        val_max = str(row.get("Transfer_Value_Max", "-"))
+        val_min = row.get("Transfer_Value_Min", "-")
+        val_max = row.get("Transfer_Value_Max", "-")
         division = str(row.get("Division", "Unknown"))
         age = str(row.get("Age", "-"))
 
@@ -198,12 +270,10 @@ def plot_scouting_cards(
         else:
             mins_str = "Mins: N/A"
 
-        if val_min == val_max:
-            val_str = f"Val: {val_min}"
-        else:
-            val_str = f"Val: {val_min} - {val_max}"
+        # Formatted transfer value string
+        val_str = build_transfer_value_display(val_min, val_max)
 
-        # Increased header height ratio slightly to fit 4 text lines cleanly
+        # Subgridspec layout
         card_gs = outer_grid[i].subgridspec(
             2, 1, height_ratios=[1.2, 3], hspace=0.15
         )
@@ -365,10 +435,8 @@ def plot_own_team_scouting_cards(
         division = str(row.get("Division", "Own Team"))
         age = str(row.get("Age", "-"))
 
-        val_min = str(
-            row.get("Transfer_Value_Min", row.get("Transfer Value", "-"))
-        )
-        val_max = str(row.get("Transfer_Value_Max", ""))
+        val_min = row.get("Transfer_Value_Min", row.get("Transfer Value", "-"))
+        val_max = row.get("Transfer_Value_Max", "-")
 
         # Extract Minutes
         mins_raw = row.get("Minutes", None)
@@ -380,12 +448,8 @@ def plot_own_team_scouting_cards(
         else:
             mins_str = "Mins: N/A"
 
-        if val_max and val_min != val_max:
-            val_str = f"Val: {val_min} - {val_max}"
-        elif val_min != "-":
-            val_str = f"Val: {val_min}"
-        else:
-            val_str = "Status: Squad Member"
+        # Formatted transfer value string
+        val_str = build_transfer_value_display(val_min, val_max)
 
         card_gs = outer_grid[i].subgridspec(
             2, 1, height_ratios=[1.2, 3], hspace=0.15
