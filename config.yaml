@@ -50,7 +50,19 @@ general:
         factor: 0.80
       - league: "PKO BP Ekstraklasa"
         country: "Poland"
-        factor: 0.78
+        factor: 0.8
+      - league: "Premier Division"
+        country: "Sweden"
+        factor: 0.8
+      - league: "Superleague"
+        country: "Switzerland"
+        factor: 0.8
+      - league: "J3 League"
+        country: "Japan"
+        factor: 0.75
+      - league: "3. Liga"
+        country: "Germany"
+        factor: 0.65
 
 positions:
   # Torwart (Goalkeeper)
@@ -89,30 +101,29 @@ positions:
       - "Progressive Passes per 90"
       - "Tackle Completion Percentage"
     metric_groups:
-      Ground Defending:
+      Aerial & Box Defense:
         weight: 1.4
         metrics:
-          - "Key Tackles per 90"
-          - "Tackle Completion Percentage"
-      Aerial Dominance:
+          - "Headers Won Percentage"
+          - "Headers Won per 90"
+          - "Clearances per 90"
+      Anticipation & Covering:
         weight: 1.3
         metrics:
-          - "Headers Won Percentage"
-          - "Key Headers per 90"
-      Anticipation & Protection:
-        weight: 1.1
-        metrics:
           - "Interceptions per 90"
-          - "Blk/90"
-          - "Shts Blckd/90"
           - "Possession Won per 90"
+          - "Blk/90"
       Distribution & Security:
-        weight: 0.8
+        weight: 1.1
         metrics:
           - "Pass Completion Percentage"
           - "Progressive Passes per 90"
+      Ground Tackling:
+        weight: 0.8
+        metrics:
+          - "Tackle Completion Percentage"
       Pressure Resistance:
-        weight: 1.2
+        weight: 0.6
         metrics:
           - "Possession Lost per 90"
 

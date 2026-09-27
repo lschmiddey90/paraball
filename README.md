@@ -42,6 +42,60 @@ pip install -r requirements.txt
 
 ## 🚀 Usage
 
+### the config file
+This is where you have all the flexibility to create your own profiles! For example, a profile I came up with for my current tactic is this one:
+
+```
+# Innenverteidiger (Center Backs)
+  CB:
+    positions: ["D"]
+    sides: ["C"]
+    metrics:
+      - "Tackles Completed per 90"
+      - "Key Tackles per 90"
+      - "Interceptions per 90"
+      - "Blk/90"
+      - "Shts Blckd/90"
+      - "Clearances per 90"
+      - "Headers Won per 90"
+      - "Headers Won Percentage"
+      - "Key Headers per 90"
+      - "Possession Won per 90"
+      - "Possession Lost per 90"
+      - "Pass Completion Percentage"
+      - "Progressive Passes per 90"
+      - "Tackle Completion Percentage"
+    metric_groups:
+      Ground Defending:
+        weight: 1.4
+        metrics:
+          - "Key Tackles per 90"
+          - "Tackle Completion Percentage"
+      Aerial Dominance:
+        weight: 1.3
+        metrics:
+          - "Headers Won Percentage"
+          - "Key Headers per 90"
+      Anticipation & Protection:
+        weight: 1.1
+        metrics:
+          - "Interceptions per 90"
+          - "Blk/90"
+          - "Shts Blckd/90"
+          - "Possession Won per 90"
+      Distribution & Security:
+        weight: 0.8
+        metrics:
+          - "Pass Completion Percentage"
+          - "Progressive Passes per 90"
+      Pressure Resistance:
+        weight: 1.2
+        metrics:
+          - "Possession Lost per 90"
+```
+
+All you need to do is to adjust it to your liking and it will automatically show up in the squad_overview and transfer_finder.
+
 Open the respective Jupyter Notebooks, update the data folder path to point to your CSV files, and run all cells:
 
 1. **`squad_overview.ipynb`**  
