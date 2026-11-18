@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from .filter_logic import filter_players_by_position
-from .squad_analytics import _get_league_multiplier, apply_league_normalization
+from .squad_analytics import apply_league_normalization
 
 
 def _get_group_metrics_and_weights(role_cfg):
@@ -34,7 +34,7 @@ def calculate_player_profile_scores(
     after applying league normalization multipliers.
     """
     if inverse_metrics is None:
-        inverse_metrics = ["Possession Lost per 90"]
+        inverse_metrics = ["Possession Lost per 90", "MLG"]
 
     general_config = config.get("general", {})
     pos_config = config.get("positions", {})
@@ -111,12 +111,20 @@ def calculate_player_profile_scores(
             # Compute relative percentile for EVERY player against market distribution
             player_vals = combined_df[m].to_numpy(dtype=float)
 
-            # Vectorized percentile rank (Percentage of market values <= player value)
-            ranks = np.array([
-                np.sum(market_distribution <= val) / len(market_distribution)
-                if not np.isnan(val) else 0.0
-                for val in player_vals
-            ])
+            # Tie handling matches scoring.py:
+            # - normal metrics: ties (mostly at 0 = worst) share the LOWEST rank
+            #   = (market values strictly below + 1) / market size   [method="min"]
+            # - inverse metrics (already flipped above, "-" was filled with 0 by
+            #   apply_league_normalization): ties at the best value share the
+            #   HIGHEST rank = (market values <= value) / market size [method="max"]
+            sorted_market = np.sort(market_distribution)
+            if m in inverse_metrics:
+                n_le = np.searchsorted(sorted_market, player_vals, side="right")
+                ranks = n_le / len(sorted_market)
+            else:
+                n_below = np.searchsorted(sorted_market, player_vals, side="left")
+                ranks = np.minimum((n_below + 1) / len(sorted_market), 1.0)
+            ranks[np.isnan(player_vals)] = 0.0
             percentile_df[m] = ranks
 
         # 3. Calculate Weighted Metric Group Scores

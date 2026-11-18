@@ -120,6 +120,30 @@ def filter_players_by_position(
     return df[mask].copy()
 
 
+def filter_by_min_minutes(df, min_minutes, minutes_col="Minutes", label="players"):
+    """Keeps only players with at least `min_minutes` played.
+
+    Players without a minutes value are dropped. If the column is missing,
+    the DataFrame is returned unchanged and a warning is printed.
+    """
+    if min_minutes is None or df.empty:
+        return df
+    if minutes_col not in df.columns:
+        print(
+            f"[Warning] '{minutes_col}' column not found - minimum minutes filter "
+            f"NOT applied to {label}. Add '{minutes_col}' to the export."
+        )
+        return df
+
+    minutes = pd.to_numeric(df[minutes_col], errors="coerce")
+    df_out = df[minutes >= min_minutes].copy()
+    print(
+        f"Minimum minutes filter (>= {min_minutes}) on {label}: "
+        f"{len(df_out)} of {len(df)} kept"
+    )
+    return df_out
+
+
 def apply_post_scoring_filters(
     scored_df, min_age=None, max_age=None, max_transfer_val=None
 ):
@@ -146,8 +170,8 @@ def apply_post_scoring_filters(
             # Ensure target column is numeric
             transfer_vals = pd.to_numeric(df_out[target_col], errors="coerce")
 
-            # Include players whose minimum transfer value is within budget
-            # Exclude unpriced / unknown players (-99 or NaN)
+            # Include players whose minimum transfer value is within budget.
+            # Unpriced players ("Unknown" / "Not for Sale" -> -99) are kept on purpose.
             df_out = df_out[
                 (transfer_vals <= max_transfer_val)
             ]

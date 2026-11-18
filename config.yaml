@@ -1,4 +1,9 @@
-# Moneyball Football Manager 2026 - 5-2-1-2 Gegenpress Config
+# Moneyball Football Manager - FM27 Config
+# Tactic: balanced mentality, counter-attacking.
+#   In possession: more direct passing, higher tempo, pass into space,
+#                  dribbling encouraged, more creative freedom.
+#   Out of possession: low block, lower defensive line, trigger press much more often.
+# MLG is an inverse metric (lower = better).
 
 general:
   id_columns:
@@ -139,183 +144,263 @@ positions:
         metrics:
           - "MLG"
 
-  # Inverted Full-Backs (Tuck in to form a back 3; prioritize overall defensive volume, retention & reliability)
+  # Inverted Full-Back (IP) / Holding Full-Back (OOP)
+  # IP: tucks into midfield, keeps the ball moving forward quickly.
+  # OOP: stays home in the low block, defends the flank 1v1 and the back post.
   IFB:
     positions: ["D", "WB"]
     sides: ["L", "R"]
     metrics:
-      - "Def Act"
-      - "Possession"
-      - "MLG"
-      - "Int/90"
       - "Tck/90"
       - "K Tck/90"
-      - "Aer A/90"
+      - "Int/90"
+      - "Def Act"
+      - "Shts Blckd/90"
+      - "Hdrs W/90"
       - "Hdr %"
+      - "Clr/90"
       - "Pr passes/90"
-      - "Pas %"
       - "Ps A/90"
+      - "Pas %"
+      - "Possession"
+      - "Pres C/90"
+      - "Pres C"
+      - "MLG"
     metric_groups:
-      Defending:
+      Flank_Defending:
         weight: 1.5
         metrics:
-          - "Def Act"
-          - "Int/90"
           - "Tck/90"
           - "K Tck/90"
-      Ball_Security_And_Build_Up:
-        weight: 1.4
+          - "Int/90"
+          - "Def Act"
+          - "Shts Blckd/90"
+      Back_Post_And_Box:
+        weight: 1.0
         metrics:
-          - "Possession"
-          - "Pr passes/90"
-          - "Pas %"
-          - "Ps A/90"
-      Reliability: # Ensure MLG is inverted in your scoring script
+          - "Hdrs W/90"
+          - "Hdr %"
+          - "Clr/90"
+      Inverted_Build_Up:
         weight: 1.3
+        metrics:
+          - "Pr passes/90"
+          - "Ps A/90"
+          - "Pas %"
+          - "Possession"
+      Pressing_Triggers:
+        weight: 0.9
+        metrics:
+          - "Pres C/90"
+          - "Pres C"
+      Reliability:
+        weight: 0.7
         metrics:
           - "MLG"
 
-  # Advanced Defender (Central defender stepping into midfield / aggressive ball-playing CB)
+  # Advanced Centre-Back (IP) / Covering Centre-Back (OOP)
+  # IP: steps out of the back line, carries and plays direct progressive passes.
+  # OOP: drops off and covers in a deep line - reading play, blocking, clearing, winning headers.
   ADV_DEF:
     positions: ["D"]
     sides: ["C"]
     metrics:
+      - "Int/90"
+      - "Clr/90"
+      - "Shts Blckd/90"
       - "Def Act"
-      - "Possession"
-      - "MLG"
+      - "Hdrs W/90"
+      - "Hdr %"
+      - "K Hdrs/90"
       - "Pr passes/90"
+      - "Drb/90"
       - "Ps A/90"
       - "Pas %"
-      - "Int/90"
-      - "Hdr %"
-      - "Hdrs W/90"
-      - "Clr/90"
-      - "Drb/90"
+      - "Possession"
+      - "MLG"
     metric_groups:
-      Progression:
+      Covering_And_Box_Defending:
         weight: 1.5
         metrics:
+          - "Int/90"
+          - "Clr/90"
+          - "Shts Blckd/90"
+          - "Def Act"
+      Aerial_Dominance:
+        weight: 1.3
+        metrics:
+          - "Hdrs W/90"
+          - "Hdr %"
+          - "K Hdrs/90"
+      Advanced_Progression:
+        weight: 1.1
+        metrics:
           - "Pr passes/90"
+          - "Drb/90"
           - "Ps A/90"
           - "Pas %"
-      Proactive_Defending:
-        weight: 1.4
-        metrics:
-          - "Def Act"
-          - "Int/90"
-          - "Possession"
-      Aerial_And_Box:
-        weight: 1.2
-        metrics:
-          - "Hdr %"
-          - "Hdrs W/90"
-          - "Clr/90"
-      Reliability: # Ensure MLG is inverted in your scoring script
-        weight: 1.3
+      Reliability:
+        weight: 0.8
         metrics:
           - "MLG"
 
-  # Defensive Midfielders (Double Pivot: screening, turnover differential, progressive distribution)
+  # Defensive Midfielder (IP) / Stopping Wide Centre-Back (OOP)
+  # IP: screens and distributes - first, direct pass to launch counters.
+  # OOP: drops into the back line as a wide CB and steps out aggressively to engage.
   DM:
     positions: ["DM", "M"]
     sides: ["C"]
     metrics:
-      - "Def Act"
-      - "Possession"
-      - "PsP"
-      - "Int/90"
       - "Tck/90"
-      - "Pres C/90"
+      - "K Tck/90"
+      - "Int/90"
+      - "Def Act"
+      - "Poss Won/90"
+      - "Hdrs W/90"
+      - "Hdr %"
+      - "Clr/90"
+      - "Shts Blckd/90"
       - "Pr passes/90"
       - "Ps A/90"
       - "Pas %"
-      - "Drb/90"
-      - "Dist/90"
+      - "Possession"
+      - "Pres C/90"
+      - "Pres C"
+      - "MLG"
     metric_groups:
-      Ball_Winning:
+      Stopping_And_Ball_Winning:
         weight: 1.5
         metrics:
-          - "Def Act"
-          - "Int/90"
           - "Tck/90"
-          - "Pres C/90"
-      Possession_And_Distribution:
-        weight: 1.5
+          - "K Tck/90"
+          - "Int/90"
+          - "Def Act"
+          - "Poss Won/90"
+      Back_Line_Defending:
+        weight: 1.1
         metrics:
-          - "Possession"
+          - "Hdrs W/90"
+          - "Hdr %"
+          - "Clr/90"
+          - "Shts Blckd/90"
+      Direct_Distribution:
+        weight: 1.3
+        metrics:
           - "Pr passes/90"
-          - "PsP"
           - "Ps A/90"
           - "Pas %"
-      Work_Rate_And_Reliability: # Ensure MLG is inverted in your scoring script
+          - "Possession"
+      Pressing_Triggers:
         weight: 1.2
         metrics:
-          - "Dist/90"
+          - "Pres C/90"
+          - "Pres C"
+      Reliability:
+        weight: 0.7
+        metrics:
+          - "MLG"
 
-  # Channel Midfielders (Mezzalas / Half-space runners: carrying, half-space creation, pressing)
+  # Channel Midfielder (IP) / Central Midfielder (OOP)
+  # IP: attacks the half-space/channels, carries the ball on the counter, creates.
+  # OOP: compact in the low block, triggers the press and wins the ball back.
   CHANNEL_MID:
     positions: ["M", "AM"]
     sides: ["C"]
     metrics:
-      - "Pr passes/90"
+      - "xA/90"
       - "OP-KP/90"
       - "Ch C/90"
-      - "xA/90"
+      - "Pr passes/90"
       - "Drb/90"
-      - "NP-xG/90"
-      - "Pres C/90"
       - "Sprints/90"
+      - "NP-xG/90"
+      - "ShT/90"
+      - "Pres C/90"
+      - "Pres C"
+      - "Poss Won/90"
+      - "Tck/90"
+      - "Int/90"
       - "Dist/90"
-      - "Possession"
     metric_groups:
-      Half_Space_Creation:
+      Channel_Creation:
         weight: 1.4
         metrics:
+          - "xA/90"
           - "OP-KP/90"
           - "Ch C/90"
-          - "xA/90"
           - "Pr passes/90"
-      Ball_Carrying:
+      Carrying_And_Runs:
         weight: 1.3
         metrics:
           - "Drb/90"
+          - "Sprints/90"
           - "NP-xG/90"
-      Pressing_And_Two_Way:
-        weight: 1.2
+      Pressing_And_Ball_Winning:
+        weight: 1.3
         metrics:
           - "Pres C/90"
-          - "Sprints/90"
+          - "Pres C"
+          - "Poss Won/90"
+          - "Tck/90"
+          - "Int/90"
+      Work_Rate:
+        weight: 0.6
+        metrics:
+          - "Dist/90"
 
-  # Wingers (Width providers, 1v1 take-ons, crossing & back-post goal threat)
+  # Winger (IP) / Wide Midfielder (OOP)
+  # IP: holds the width, beats players 1v1 and drives counters, delivers into the box.
+  # OOP: tracks back into a midfield line of the low block, presses wide triggers.
   WINGER:
     positions: ["AM", "M"]
     sides: ["L", "R"]
     metrics:
       - "Drb/90"
+      - "Sprints/90"
+      - "xA/90"
       - "OP-Crs A/90"
       - "OP-Cr %"
-      - "xA/90"
       - "Ch C/90"
       - "OP-KP/90"
       - "NP-xG/90"
       - "ShT/90"
-      - "Sprints/90"
       - "Pres C/90"
+      - "Pres C"
+      - "Tck/90"
+      - "Int/90"
+      - "Poss Won/90"
     metric_groups:
-      Dribbling_And_Width:
+      Dribbling_And_Transition:
         weight: 1.4
         metrics:
           - "Drb/90"
           - "Sprints/90"
       Delivery_And_Creation:
-        weight: 1.4
+        weight: 1.3
         metrics:
           - "xA/90"
           - "OP-Crs A/90"
           - "OP-Cr %"
           - "Ch C/90"
+          - "OP-KP/90"
+      Goal_Threat:
+        weight: 1.0
+        metrics:
+          - "NP-xG/90"
+          - "ShT/90"
+      Defensive_Work:
+        weight: 1.0
+        metrics:
+          - "Pres C/90"
+          - "Pres C"
+          - "Tck/90"
+          - "Int/90"
+          - "Poss Won/90"
 
-  # Deep-Lying Forward (Drops into pockets to link play, creates for wingers/mezzalas, finishes)
+  # Deep-Lying Forward (IP) / Central Outlet Centre-Forward (OOP)
+  # IP: drops into pockets to link play and release runners, still a goal threat.
+  # OOP: stays high as the counter outlet - holds up, wins headers, runs in behind.
+  #      (little defensive work expected, so no pressing group)
   DLF:
     positions: ["ST", "AM"]
     sides: ["C"]
@@ -326,15 +411,17 @@ positions:
       - "Pr passes/90"
       - "Pas %"
       - "NP-xG/90"
-      - "xG-OP"
       - "ShT/90"
       - "Conv %"
-      - "Drb/90"
+      - "xG-OP"
+      - "Aer A/90"
       - "Hdrs W/90"
-      - "Pres C/90"
+      - "Hdr %"
+      - "Drb/90"
+      - "Sprints/90"
     metric_groups:
       Link_Up_And_Creation:
-        weight: 1.5
+        weight: 1.4
         metrics:
           - "xA/90"
           - "Ch C/90"
@@ -342,15 +429,17 @@ positions:
           - "Pr passes/90"
           - "Pas %"
       Goal_Threat:
-        weight: 1.3
+        weight: 1.4
         metrics:
           - "NP-xG/90"
           - "xG-OP"
           - "ShT/90"
           - "Conv %"
-      Hold_Up_And_Press:
-        weight: 1.1
+      Counter_Outlet:
+        weight: 1.3
         metrics:
-          - "Drb/90"
+          - "Aer A/90"
           - "Hdrs W/90"
-          - "Pres C/90"
+          - "Hdr %"
+          - "Drb/90"
+          - "Sprints/90"

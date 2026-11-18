@@ -86,10 +86,19 @@ def calculate_moneyball_scores(
             df_combined[metric], errors="coerce"
         )
 
-        ascending = metric not in inverse_metrics
-        pct_rank = df_combined[metric].rank(
-            pct=True, ascending=ascending, method="min"
-        )
+        is_inverse = metric in inverse_metrics
+        if is_inverse:
+            # Inverse metrics (e.g. MLG): "-" means no occurrences -> 0 (best value).
+            # Ties at the best value share the HIGHEST rank, so 0 mistakes = 1.0.
+            df_combined[metric] = df_combined[metric].fillna(0)
+            pct_rank = df_combined[metric].rank(
+                pct=True, ascending=False, method="max"
+            )
+        else:
+            # Ties (mostly at 0 = worst value) share the LOWEST rank.
+            pct_rank = df_combined[metric].rank(
+                pct=True, ascending=True, method="min"
+            )
 
         score_col_name = f"{metric}_score"
         df_combined[score_col_name] = np.ceil(pct_rank * 10) / 10.0

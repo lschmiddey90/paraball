@@ -8,19 +8,11 @@ import matplotlib.patches as patches
 from matplotlib.patches import Patch
 import seaborn as sns
 
-from .filter_logic import filter_players_by_position, matches_position_and_side
-
-
-SQUAD_POSITION_GROUPS = {
-    "GK": (["GK"], ["C"]),
-    "D(C)": (["D"], ["C"]),
-    "[D, WB](R/L)": (["D", "WB"], ["R/L"]),
-    "[DM/M](C)": (["DM", "M"], ["C"]),
-    "[M/AM](C)": (["M", "AM"], ["C"]),
-    "[M, AM](R/L)": (["M", "AM"], ["R/L"]),
-    "ST(C)": (["ST"], ["C"]),
-}
-
+from .filter_logic import (
+    SQUAD_POSITION_GROUPS,
+    filter_players_by_position,
+    matches_position_and_side,
+)
 
 def plot_age_distribution_squad(df, figsize=(15, 12)):
     """Erstellt ein Alters-Histogramm über alle Spieler im Kader
@@ -245,6 +237,17 @@ def plot_style_distribution_squad(df, figsize=(15, 14)):
 
     return fig
 
+def _ratio_to_benchmark(player_val, bench_val, is_inverse):
+    """Player value relative to the benchmark (1.0 = Top 20 average), higher = better.
+
+    Player values are 0..1 normalized. For inverse metrics the player value is
+    flipped (1 - x); the benchmark is already pre-inverted in
+    calculate_position_benchmarks, so it is used as is.
+    """
+    p_score = (1.0 - player_val) if is_inverse else player_val
+    return p_score / max(bench_val, 0.01)
+
+
 def plot_player_vs_benchmark_spider(
     player_row,
     role_name,
@@ -255,7 +258,7 @@ def plot_player_vs_benchmark_spider(
 ):
     """Renders a radar chart comparing a single player against the precalculated benchmark."""
     if inverse_metrics is None:
-        inverse_metrics = ["Possession Lost per 90"]
+        inverse_metrics = ["Possession Lost per 90", "MLG"]
 
     valid_metrics = [
         m for m in role_metrics if m in player_row.index and m in role_benchmark
@@ -277,17 +280,7 @@ def plot_player_vs_benchmark_spider(
         is_inverse = m in inverse_metrics
         display_labels.append(f"{m}\n(Inv)" if is_inverse else m)
 
-        # 1. Bring player score to "higher is better" direction
-        p_score = (1.0 - p_val) if is_inverse else p_val
-        
-        # 2. b_val is already pre-inverted in calculate_position_benchmarks
-        b_score = b_val 
-
-        # 3. Calculate ratio (baseline 1.0)
-        base = max(b_score, 0.01)
-        p_norm = p_score / base
-
-        norm_player_vals.append(p_norm)
+        norm_player_vals.append(_ratio_to_benchmark(p_val, b_val, is_inverse))
         norm_bench_vals.append(1.0)
 
     # Close the polar plot loop
@@ -373,13 +366,11 @@ def plot_top_players_per_profile_seaborn(
     for profile_name in profile_order:
         group = shortlist_df[shortlist_df["Profile"] == profile_name].copy()
 
-        # Calculate percentile rank within this specific profile cohort (0 to 100%)
-        if len(group) > 1:
-            group["Percentile"] = (
-                group["Moneyball_Score"].rank(pct=True, ascending=True) * 100
-            )
-        else:
-            group["Percentile"] = 100.0
+        # "Top X%" within this profile cohort: best player -> smallest X
+        group["Percentile"] = (
+            group["Moneyball_Score"].rank(pct=True, ascending=False, method="min")
+            * 100
+        )
 
         top_players = (
             group.sort_values(by="Moneyball_Score", ascending=False)
@@ -571,7 +562,7 @@ def plot_two_players_vs_benchmark_spider(
     the precalculated benchmark baseline (1.0) using only the profile key.
     """
     if inverse_metrics is None:
-        inverse_metrics = ["Possession Lost per 90"]
+        inverse_metrics = ["Possession Lost per 90", "MLG"]
 
     # 1. Fetch Profile Config & Benchmarks directly using profile_key
     pos_config = config.get("positions", {}).get(profile_key)
@@ -632,16 +623,8 @@ def plot_two_players_vs_benchmark_spider(
         is_inverse = m in inverse_metrics
         display_labels.append(f"{m}\n(Inv)" if is_inverse else m)
 
-        base = max(b_v, 0.01)
-        if is_inverse:
-            p1_norm = max(0.1, 2.0 - (p1_v / base))
-            p2_norm = max(0.1, 2.0 - (p2_v / base))
-        else:
-            p1_norm = p1_v / base
-            p2_norm = p2_v / base
-
-        norm_p1_vals.append(p1_norm)
-        norm_p2_vals.append(p2_norm)
+        norm_p1_vals.append(_ratio_to_benchmark(p1_v, b_v, is_inverse))
+        norm_p2_vals.append(_ratio_to_benchmark(p2_v, b_v, is_inverse))
         norm_bench_vals.append(1.0)
 
     # 5. Close polar plot loops

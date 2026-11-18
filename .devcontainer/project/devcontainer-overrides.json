@@ -1,0 +1,5 @@
+{
+  "features": {
+    "./base/features/mcp-servers": {}
+  }
+}

@@ -1,7 +1,7 @@
-import unicodedata
 import pandas as pd
 import numpy as np
 from .filter_logic import filter_players_by_position
+from .scoring import _get_league_multiplier
 
 def normalize_metrics_0_to_1(
     df_base, df_own_base=None, target_metrics=None, exclude_columns=None
@@ -83,43 +83,6 @@ def normalize_metrics_0_to_1(
 
     return df_base_norm, df_own_norm
 
-def _clean_str(val):
-    if not isinstance(val, (str, bytes)) or pd.isna(val):
-        return ""
-    val = unicodedata.normalize("NFKD", str(val))
-    val = val.replace("\xa0", " ")
-    return " ".join(val.split()).lower()
-
-
-def _get_league_multiplier(
-    division_name, country_name, top_leagues_config, default_multiplier
-):
-    div_clean = _clean_str(division_name)
-    country_clean = _clean_str(country_name)
-
-    if not div_clean or not country_clean:
-        return default_multiplier
-
-    if isinstance(top_leagues_config, dict):
-        top_leagues_config = top_leagues_config.get("top_leagues", [])
-
-    if not isinstance(top_leagues_config, list):
-        return default_multiplier
-
-    for item in top_leagues_config:
-        if not isinstance(item, dict):
-            continue
-
-        cfg_league = _clean_str(str(item.get("league", "")))
-        cfg_country = _clean_str(str(item.get("country", "")))
-
-        if cfg_league == div_clean and cfg_country == country_clean:
-            # Return custom factor if defined, defaulting to 1.0 if factor key is missing
-            return float(item.get("factor", 1.0))
-
-    return default_multiplier
-
-
 def apply_league_normalization(
     df, metrics, top_leagues_config, default_multiplier=0.75
 ):
@@ -153,7 +116,7 @@ def calculate_position_benchmarks(
     inverse_metrics=None,
 ):
     if inverse_metrics is None:
-        inverse_metrics = ["Possession Lost per 90"]
+        inverse_metrics = ["Possession Lost per 90", "MLG"]
 
     benchmarks = {}
 
