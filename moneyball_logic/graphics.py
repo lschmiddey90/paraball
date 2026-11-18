@@ -259,6 +259,10 @@ def plot_scouting_cards(
         val_max = row.get("Transfer_Value_Max", "-")
         division = str(row.get("Division", "Unknown"))
         age = str(row.get("Age", "-"))
+        
+        # Extract Preferred Foot
+        foot_raw = row.get("Preferred Foot", row.get("Preferred_Foot", "-"))
+        foot_str = f"Foot: {foot_raw if pd.notna(foot_raw) and str(foot_raw).strip() != '' else '-'}"
 
         # Extract Minutes
         mins_raw = row.get("Minutes", None)
@@ -273,9 +277,9 @@ def plot_scouting_cards(
         # Formatted transfer value string
         val_str = build_transfer_value_display(val_min, val_max)
 
-        # Subgridspec layout
+        # Subgridspec layout (increased header ratio from 1.2 to 1.35 to comfortably fit 5 text lines)
         card_gs = outer_grid[i].subgridspec(
-            2, 1, height_ratios=[1.2, 3], hspace=0.15
+            2, 1, height_ratios=[1.35, 3], hspace=0.15
         )
 
         # Header section
@@ -285,9 +289,11 @@ def plot_scouting_cards(
 
         ax_text = fig.add_subplot(header_gs[0])
         ax_text.axis("off")
+        
+        # Text block with adjusted y coordinates to prevent clipping
         ax_text.text(
             0.02,
-            0.92,
+            0.98,
             f"{i+1}. {player_name}",
             fontsize=12,
             fontweight="bold",
@@ -297,7 +303,7 @@ def plot_scouting_cards(
         )
         ax_text.text(
             0.02,
-            0.66,
+            0.75,
             f"Age: {age} | {division}",
             fontsize=8.5,
             color="#4b5563",
@@ -306,7 +312,7 @@ def plot_scouting_cards(
         )
         ax_text.text(
             0.02,
-            0.42,
+            0.53,
             val_str,
             fontsize=9,
             fontweight="semibold",
@@ -316,8 +322,18 @@ def plot_scouting_cards(
         )
         ax_text.text(
             0.02,
-            0.18,
+            0.31,
             mins_str,
+            fontsize=8.5,
+            fontweight="medium",
+            color="#4b5563",
+            va="top",
+            ha="left",
+        )
+        ax_text.text(
+            0.02,
+            0.09,
+            foot_str,
             fontsize=8.5,
             fontweight="medium",
             color="#4b5563",

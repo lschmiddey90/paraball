@@ -4,7 +4,7 @@ import pandas as pd
 
 def load_data(file_path):
     """Loads dataset from CSV using UTF-8 encoding and semicolon delimiter."""
-    return pd.read_csv(file_path, encoding="utf-8", sep=";")
+    return pd.read_csv(file_path, encoding="utf-8", sep=",")
 
 
 def clean_numeric_value(val):
@@ -109,11 +109,15 @@ def parse_transfer_value_range(val):
     return parsed_single, parsed_single
 
 
+import numpy as np
+import pandas as pd
+
+
 def prepare_dataframe(df, id_columns=None):
     """Prepares and cleans the dataset by converting numeric columns,
 
     handling European percentage strings, preserving text ID columns,
-    and calculating derived metrics (e.g., xGP_perc).
+    and calculating derived metrics.
     """
     if df.empty:
         return df
@@ -123,13 +127,16 @@ def prepare_dataframe(df, id_columns=None):
     # Known string/text columns to preserve
     default_text_cols = {
         "Player",
-        "Position",
+        "Best Pos",
         "Division",
         "Club",
         "Nation",
         "Inf",
         "Style",
-        "Transfer Value",  # Keep raw text column unparsed in text list
+        "Based In",
+        "Preferred Foot",
+        "Personality",
+        "Transfer Value",
     }
 
     if id_columns is not None:
@@ -148,6 +155,7 @@ def prepare_dataframe(df, id_columns=None):
         cleaned_df["Transfer_Value_Min"] = [r[0] for r in parsed_ranges]
         cleaned_df["Transfer_Value_Max"] = [r[1] for r in parsed_ranges]
 
+    # Clean numeric values across columns
     for col in cleaned_df.columns:
         if col in text_columns or col in [
             "Transfer_Value_Min",
@@ -155,7 +163,6 @@ def prepare_dataframe(df, id_columns=None):
         ]:
             continue
 
-        # If column contains text/words rather than numbers, keep it as text
         sample = cleaned_df[col].dropna()
         if not sample.empty and isinstance(sample.iloc[0], str):
             first_val = sample.iloc[0].strip().replace("%", "")
@@ -167,12 +174,72 @@ def prepare_dataframe(df, id_columns=None):
 
         cleaned_df[col] = cleaned_df[col].apply(clean_numeric_value)
 
-    # Calculate xGP_perc metric if both source columns exist
-    if "xGP" in cleaned_df.columns and "Goals Conceded" in cleaned_df.columns:
-        xgp = pd.to_numeric(cleaned_df["xGP"], errors="coerce")
-        gc = pd.to_numeric(cleaned_df["Goals Conceded"], errors="coerce")
+    # Helper function for safe numeric series retrieval
+    def get_num(col_name):
+        if col_name in cleaned_df.columns:
+            return pd.to_numeric(cleaned_df[col_name], errors="coerce")
+        return None
 
+    # 1. xGP_perc metric
+    xgp = get_num("xGP")
+    gc = get_num("Goals Conceded")
+    if xgp is not None and gc is not None:
         gc_safe = gc.replace(0, np.nan)
         cleaned_df["xGP_perc"] = ((xgp + gc) / gc_safe) - 1.0
+
+    # 2. Key Passes % & Progressive Passes %
+    passes_att = get_num("Passes Attempted")
+    if passes_att is not None:
+        passes_att_safe = passes_att.replace(0, np.nan)
+
+        key_passes = get_num("Key Passes")
+        if key_passes is not None:
+            cleaned_df["Key_Passes_perc"] = (
+                key_passes / passes_att_safe
+            )
+
+        psp = get_num("PsP")
+        if psp is not None:
+            cleaned_df["PsP_perc"] = (psp / passes_att_safe)
+
+    # 3. xG/shot Fallback Calculation
+    shot_p90 = get_num("Shot/90")
+    xg_p90 = get_num("xG/90")
+    if "xG/shot" not in cleaned_df.columns and xg_p90 is not None and shot_p90 is not None:
+        shot_p90_safe = shot_p90.replace(0, np.nan)
+        cleaned_df["xG/shot"] = xg_p90 / shot_p90_safe
+
+    # 4. xG Overperformance/90
+    goals_p90 = get_num("Goals per 90 minutes")
+    if goals_p90 is not None and xg_p90 is not None:
+        cleaned_df["xG_Overperformance_per_90"] = goals_p90 - xg_p90
+
+    # 5. Goal Contributions & Goal Contributions/90
+    goals = get_num("Goals")
+    assists = get_num("Assists")
+    if goals is not None and assists is not None:
+        cleaned_df["Goal_Contributions"] = goals + assists
+
+    asts_p90 = get_num("Asts/90")
+    if goals_p90 is not None and asts_p90 is not None:
+        cleaned_df["Goal_Contributions_per_90"] = goals_p90 + asts_p90
+
+    # 6. Pressure Success %
+    pres_a = get_num("Pres A")
+    pres_c = get_num("Pres C")
+    if pres_a is not None and pres_c is not None:
+        pres_a_safe = pres_a.replace(0, np.nan)
+        cleaned_df["Pressure_Success_perc"] = (pres_c / pres_a_safe)
+
+    # 7. Poss+-/90 & Poss+- %
+    poss_won_p90 = get_num("Possession Won per 90")
+    poss_lost_p90 = get_num("Possession Lost per 90")
+    if poss_won_p90 is not None and poss_lost_p90 is not None:
+        cleaned_df["Poss_Net_per_90"] = poss_won_p90 - poss_lost_p90
+
+        total_poss_actions = (poss_won_p90 + poss_lost_p90).replace(0, np.nan)
+        cleaned_df["Poss_Win_perc"] = (
+            poss_won_p90 / total_poss_actions
+        )
 
     return cleaned_df

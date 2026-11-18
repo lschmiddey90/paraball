@@ -3,6 +3,17 @@ import numpy as np
 import pandas as pd
 
 
+SQUAD_POSITION_GROUPS = {
+    "GK": (["GK"], ["C"]),
+    "D(C)": (["D"], ["C"]),
+    "[D, WB](R/L)": (["D", "WB"], ["R/L"]),
+    "[DM/M](C)": (["DM", "M"], ["C"]),
+    "[M/AM](C)": (["M", "AM"], ["C"]),
+    "[M, AM](R/L)": (["M", "AM"], ["R/L"]),
+    "ST(C)": (["ST"], ["C"]),
+}
+
+
 def parse_player_positions(pos_string):
     """Parses complex FM position strings like 'DM, M/AM (C)' or 'M (L), AM (LC)'
     into structured tuples: [('DM', ['C']), ('M', ['C']), ('AM', ['C'])].
@@ -57,8 +68,45 @@ def matches_position_and_side(pos_string, selected_positions, selected_sides):
     return False
 
 
+def calculate_personality_averages(df_squad, config):
+    """Calculates average personality score across all players and per position group.
+
+    Adds 'Personality_Value' directly to df_squad based on config mappings.
+    If a player fits multiple position groups, they are included in each matching group.
+    """
+    personality_dict = config.get("general", {}).get("personalities", {})
+
+    # Add Personality_Value column directly to df_squad
+    df_squad["Personality_Value"] = df_squad["Personality"].map(
+        personality_dict
+    )
+
+    # Filter out rows without a valid personality mapping for calculations
+    valid_df = df_squad.dropna(subset=["Personality_Value"])
+
+    # 1. Overall average
+    all_avg = valid_df["Personality_Value"].mean()
+    averages = {"All": float(all_avg) if not np.isnan(all_avg) else 0.0}
+
+    # 2. Average per Squad Position Group
+    for group_name, (roles, sides) in SQUAD_POSITION_GROUPS.items():
+        mask = valid_df["Best Pos"].apply(
+            lambda pos_str: matches_position_and_side(pos_str, roles, sides)
+        )
+        group_players = valid_df[mask]
+
+        if len(group_players) > 0:
+            averages[group_name] = float(
+                group_players["Personality_Value"].mean()
+            )
+        else:
+            averages[group_name] = np.nan
+
+    return averages
+
+
 def filter_players_by_position(
-    df, selected_positions, selected_sides, pos_col="Position"
+    df, selected_positions, selected_sides, pos_col="Best Pos"
 ):
     """Filters DataFrame rows based on position and side matching."""
     if df.empty or pos_col not in df.columns:

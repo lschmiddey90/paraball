@@ -1,11 +1,14 @@
 import math
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import matplotlib.ticker as ticker
+import matplotlib.patches as patches
 from matplotlib.patches import Patch
 import seaborn as sns
 
-from .filter_logic import filter_players_by_position
+from .filter_logic import filter_players_by_position, matches_position_and_side
 
 
 SQUAD_POSITION_GROUPS = {
@@ -697,3 +700,94 @@ def plot_two_players_vs_benchmark_spider(
     ax.legend(loc="upper right", bbox_to_anchor=(1.30, 1.1), frameon=True)
 
     return fig
+
+
+def plot_personality_boxplot_by_position(
+    df_squad, config, title="Personality Value Distribution by Position"
+):
+    """Generates a boxplot chart showing the distribution of personality values 
+    across squad position groups and the overall squad ("All").
+    """
+    personality_dict = config.get("general", {}).get("personalities", {})
+
+    # Ensure Personality_Value exists in df_squad
+    if "Personality_Value" not in df_squad.columns:
+        df_squad["Personality_Value"] = df_squad["Personality"].map(personality_dict)
+
+    # Filter out rows with missing personality scores or positions
+    valid_df = df_squad.dropna(subset=["Personality_Value", "Best Pos"]).copy()
+
+    records = []
+
+    # 1. Add "All" group entries
+    for _, row in valid_df.iterrows():
+        records.append({
+            "Group": "All",
+            "Personality_Value": row["Personality_Value"]
+        })
+
+    # 2. Add entries per Squad Position Group (players fit into every group they qualify for)
+    for group_name, (roles, sides) in SQUAD_POSITION_GROUPS.items():
+        mask = valid_df["Best Pos"].apply(
+            lambda pos_str: matches_position_and_side(pos_str, roles, sides)
+        )
+        for val in valid_df.loc[mask, "Personality_Value"]:
+            records.append({
+                "Group": group_name,
+                "Personality_Value": val
+            })
+
+    # Convert records into a long-format DataFrame for Seaborn
+    plot_df = pd.DataFrame(records)
+
+    if plot_df.empty:
+        print("No valid player personality data found to plot.")
+        return
+
+    # Set up figure styling
+    plt.figure(figsize=(12, 6))
+    sns.set_theme(style="whitegrid")
+
+    # Plot Boxplot
+    ax = sns.boxplot(
+        data=plot_df,
+        x="Group",
+        y="Personality_Value",
+        palette="viridis",
+        width=0.5,
+        fliersize=0  # Hide default outliers to prevent duplicate dots from stripplot
+    )
+
+    # Overlay Individual Player Data Points
+    sns.stripplot(
+        data=plot_df,
+        x="Group",
+        y="Personality_Value",
+        color="black",
+        alpha=0.6,
+        jitter=0.2,
+        size=5
+    )
+
+    # Chart Formatting
+    plt.title(title, fontsize=14, fontweight="bold", pad=15)
+    plt.xlabel("Position Group", fontsize=11, fontweight="bold", labelpad=10)
+    plt.ylabel("Personality Value (0 = Worst, 1 = Best)", fontsize=11, fontweight="bold")
+    plt.ylim(-0.05, 1.05)
+    plt.xticks(rotation=20, ha="right", fontsize=10, fontweight="bold")
+
+    # Annotate group means above each box
+    means = plot_df.groupby("Group", sort=False)["Personality_Value"].mean()
+    groups = plot_df["Group"].unique()
+    
+    for i, group in enumerate(groups):
+        mean_val = means.get(group, np.nan)
+        if not np.isnan(mean_val):
+            ax.text(
+                i, 1.02, f"μ={mean_val:.2f}",
+                ha="center", va="bottom",
+                fontsize=9, fontweight="bold", color="#333333"
+            )
+
+    plt.tight_layout()
+    plt.show()
